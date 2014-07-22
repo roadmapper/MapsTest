@@ -5,7 +5,7 @@ package com.vinaydandekar.mapstest;
  */
 public class Flight {
 
-    private String flightNum, origin, destination;
+    private String flightNum, origin, destination, aircraft;
     private int track;
     private double latitude, longitude;
 
@@ -31,6 +31,14 @@ public class Flight {
 
     public void setDestination(String destination) {
         this.destination = destination;
+    }
+
+    public String getAircraft() {
+        return aircraft;
+    }
+
+    public void setAircraft(String aircraft) {
+        this.aircraft = aircraft;
     }
 
     public double getLatitude() {
