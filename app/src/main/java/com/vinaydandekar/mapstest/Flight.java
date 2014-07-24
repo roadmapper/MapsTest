@@ -66,6 +66,6 @@ public class Flight {
     }
 
     public String toString() {
-        return "Flight Number: " + flightNum + "\n" + origin + " -> " + destination + "\n" + "(" + latitude + ", " + longitude + ") \n\n";
+        return "\n\nFlight Number: " + flightNum + "\n" + origin + " -> " + destination + "\n" + "(" + latitude + ", " + longitude + ") \n\n";
     }
 }

@@ -1,14 +1,25 @@
 package com.vinaydandekar.mapstest;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesClient.*;
+import com.google.android.gms.location.LocationClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -22,8 +33,12 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import java.util.ArrayList;
 
-public class MapsActivity extends FragmentActivity {
+public class MapsActivity extends FragmentActivity implements ConnectionCallbacks, OnConnectionFailedListener, LocationListener{
 
+    LocationClient locationClient;
+    LocationRequest locationRequest;
+    Location myLocation, lastLocation = null;
+    boolean locationEnabled;
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     JSONObject sprite_list = null;
     JSONObject aircraft_list = null;
@@ -32,13 +47,61 @@ public class MapsActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-        setUpMapIfNeeded();
+
+        LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) && !locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+            locationEnabled = false;
+            Toast.makeText(getApplicationContext(), "Please enable location.", Toast.LENGTH_SHORT).show();
+            //System.out.println("no location?!");
+        }
+        else {
+            locationEnabled = true;
+            System.out.println("location?!");
+        }
+        locationClient = new LocationClient(this, this, this);
+        locationRequest = new LocationRequest();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(5000);
+        locationRequest.setFastestInterval(1000);
+        locationClient.connect();
+
+    }
+
+    @Override
+     public void onConnected(Bundle bundle) {
+        lastLocation = locationClient.getLastLocation();
+        if (lastLocation == null) {
+            locationClient.requestLocationUpdates(locationRequest, this);
+        }
+        else {
+            Toast.makeText(getApplicationContext(), "Location: " + lastLocation.getLatitude() + "," + lastLocation.getLongitude(), Toast.LENGTH_SHORT).show();
+            myLocation = lastLocation;
+            setUpMapIfNeeded();
+        }
+    }
+
+    @Override
+    public void onDisconnected() {
+        Toast.makeText(getApplicationContext(), "Disconnected from Google Play Services", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        Toast.makeText(getApplicationContext(), "Could not connect to Google Play Services", Toast.LENGTH_SHORT).show();
+
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        locationClient.removeLocationUpdates(this);
+        myLocation = location;
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        setUpMapIfNeeded();
+        if (locationEnabled && (lastLocation != null))
+            setUpMapIfNeeded();
     }
 
     /**
@@ -76,8 +139,15 @@ public class MapsActivity extends FragmentActivity {
      * This should only be called once and when we are sure that {@link #mMap} is not null.
      */
     private void setUpMap() {
-        System.out.println("Connecting...");
-        String targetUrl = "http://54.234.224.194/api/v1/flights/find_lat_long?lat=38.964022&long=-77.378791&quantity=5";
+
+        double latitude = 0, longitude = 0;
+        if (myLocation != null) {
+            latitude = myLocation.getLatitude();
+            longitude = myLocation.getLongitude();
+        }
+        String awsIP = "";
+        String localhostIP = "192.168.1.103:3000";
+        String targetUrl = "http://" + localhostIP + "/api/v1/flights/find_lat_long?lat=" + latitude +"&long=" + longitude +"&quantity=20";
 
         try {
             aircraft_list = new JSONObject("{\"A388\":\"a380\",\"A380\":\"a380\",\"A389\":\"a380\",\"B741\":\"b747\",\"B742\":\"b747\",\"B743\":\"b747\",\"B744\":\"b747\",\"B74F\":\"b747\",\"B74S\":\"b747\",\"B748\":\"b747\",\"BCLF\":\"b747\",\"BLCF\":\"b747\",\"A318\":\"a320\",\"A319\":\"a320\",\"A320\":\"a320\",\"A321\":\"a320\",\"B731\":\"b737\",\"B732\":\"b737\",\"B733\":\"b737\",\"B734\":\"b737\",\"B735\":\"b737\",\"B736\":\"b737\",\"B737\":\"b737\",\"B738\":\"b737\",\"B739\":\"b737\",\"E170\":\"b737\",\"E190\":\"b737\",\"A300\":\"b737\",\"A30B\":\"b737\",\"A306\":\"b737\",\"A310\":\"b737\",\"SU95\":\"b737\",\"B772\":\"b777\",\"B773\":\"b777\",\"B77F\":\"b777\",\"B77L\":\"b777\",\"B77W\":\"b777\",\"B752\":\"b757\",\"B753\":\"b757\",\"T204\":\"b757\",\"T214\":\"b757\",\"B762\":\"b767\",\"B763\":\"b767\",\"B764\":\"b767\",\"A332\":\"a330\",\"A333\":\"a330\",\"A359\":\"a330\",\"B788\":\"a330\",\"B789\":\"a330\",\"A3ST\":\"a330\",\"A342\":\"a343\",\"A343\":\"a343\",\"IL76\":\"a343\",\"IL86\":\"a343\",\"IL96\":\"a343\",\"K35R\":\"a343\",\"A124\":\"a343\",\"A345\":\"a346\",\"A346\":\"a346\",\"RJ1H\":\"rjx\",\"RJ70\":\"rjx\",\"RJ85\":\"rjx\",\"B461\":\"rjx\",\"B462\":\"rjx\",\"B463\":\"rjx\",\"A148\":\"rjx\",\"A158\":\"rjx\",\"MD11\":\"md11\",\"DC10\":\"md11\",\"A109\":\"helo\",\"A139\":\"helo\",\"A149\":\"helo\",\"A189\":\"helo\",\"AS32\":\"helo\",\"AS3B\":\"helo\",\"AS50\":\"helo\",\"AS55\":\"helo\",\"AS65\":\"helo\",\"B407\":\"helo\",\"B412\":\"helo\",\"B427\":\"helo\",\"B429\":\"helo\",\"B430\":\"helo\",\"EC20\":\"helo\",\"EC25\":\"helo\",\"EC30\":\"helo\",\"EC35\":\"helo\",\"EC45\":\"helo\",\"EC55\":\"helo\",\"H269\":\"helo\",\"R44\":\"helo\",\"S61\":\"helo\",\"S76\":\"helo\",\"S92\":\"helo\",\"MD80\":\"md80\",\"MD81\":\"md80\",\"MD82\":\"md80\",\"MD83\":\"md80\",\"MD87\":\"md80\",\"MD88\":\"md80\",\"MD90\":\"md80\",\"B712\":\"md80\",\"B717\":\"md80\",\"B722\":\"md80\",\"CRJ\":\"md80\",\"CRJX\":\"md80\",\"CRJ1\":\"md80\",\"CRJ2\":\"md80\",\"CRJ7\":\"md80\",\"CRJ9\":\"md80\",\"DC91\":\"md80\",\"DC93\":\"md80\",\"DC95\":\"md80\",\"E45X\":\"md80\",\"E135\":\"md80\",\"E145\":\"md80\",\"F70\":\"md80\",\"F100\":\"md80\",\"T154\":\"md80\",\"YK42\":\"md80\",\"SB20\":\"sb20\",\"SF34\":\"sb20\",\"AN26\":\"sb20\",\"ATP\":\"sb20\",\"AT42\":\"sb20\",\"AT72\":\"sb20\",\"AT43\":\"sb20\",\"AT44\":\"sb20\",\"AT45\":\"sb20\",\"AT46\":\"sb20\",\"AT73\":\"sb20\",\"AT74\":\"sb20\",\"AT75\":\"sb20\",\"AT76\":\"sb20\",\"B190\":\"sb20\",\"B350\":\"sb20\",\"BE99\":\"sb20\",\"C130\":\"sb20\",\"CVLP\":\"sb20\",\"CVLT\":\"sb20\",\"D228\":\"sb20\",\"D328\":\"sb20\",\"DC3\":\"sb20\",\"DC3T\":\"sb20\",\"DC6\":\"sb20\",\"DHC6\":\"sb20\",\"DHC7\":\"sb20\",\"DH8A\":\"sb20\",\"DH8B\":\"sb20\",\"DH8C\":\"sb20\",\"DH8D\":\"sb20\",\"E110\":\"sb20\",\"E120\":\"sb20\",\"F50\":\"sb20\",\"G159\":\"sb20\",\"JS31\":\"sb20\",\"JS32\":\"sb20\",\"JS41\":\"sb20\",\"SH33\":\"sb20\",\"SH36\":\"sb20\",\"SW4\":\"sb20\",\"J328\":\"sb20\",\"AC50\":\"sb20\",\"AC90\":\"sb20\",\"AC95\":\"sb20\",\"AEST\":\"sb20\",\"BE10\":\"sb20\",\"BE20\":\"sb20\",\"BE30\":\"sb20\",\"BE50\":\"sb20\",\"BE55\":\"sb20\",\"BE56\":\"sb20\",\"BE58\":\"sb20\",\"BE60\":\"sb20\",\"BE65\":\"sb20\",\"BE76\":\"sb20\",\"BE80\":\"sb20\",\"BE95\":\"sb20\",\"BE96\":\"sb20\",\"BE9L\":\"sb20\",\"BE9T\":\"sb20\",\"C303\":\"sb20\",\"C310\":\"sb20\",\"C320\":\"sb20\",\"C340\":\"sb20\",\"C402\":\"sb20\",\"C404\":\"sb20\",\"C414\":\"sb20\",\"C421\":\"sb20\",\"C425\":\"sb20\",\"C441\":\"sb20\",\"C21T\":\"sb20\",\"DA42\":\"sb20\",\"MU2\":\"sb20\",\"PA23\":\"sb20\",\"PA27\":\"sb20\",\"PA30\":\"sb20\",\"PA31\":\"sb20\",\"PA34\":\"sb20\",\"PA44\":\"sb20\",\"PA60\":\"sb20\",\"PAY1\":\"sb20\",\"PAY2\":\"sb20\",\"PAY3\":\"sb20\",\"PAY4\":\"sb20\",\"P34A\":\"sb20\",\"P180\":\"sb20\",\"SW2\":\"sb20\",\"SW3\":\"sb20\",\"ASTR\":\"lj45\",\"BE40\":\"lj45\",\"C500\":\"lj45\",\"C501\":\"lj45\",\"C510\":\"lj45\",\"C525\":\"lj45\",\"C25A\":\"lj45\",\"C25B\":\"lj45\",\"C25C\":\"lj45\",\"C550\":\"lj45\",\"C551\":\"lj45\",\"C560\":\"lj45\",\"C56X\":\"lj45\",\"C650\":\"lj45\",\"C680\":\"lj45\",\"C750\":\"lj45\",\"CL30\":\"lj45\",\"CL60\":\"lj45\",\"EA50\":\"lj45\",\"E50P\":\"lj45\",\"E55P\":\"lj45\",\"FA10\":\"lj45\",\"FA20\":\"lj45\",\"FA30\":\"lj45\",\"FA40\":\"lj45\",\"FA50\":\"lj45\",\"FA7X\":\"lj45\",\"F900\":\"lj45\",\"F2TH\":\"lj45\",\"GALX\":\"lj45\",\"GLF2\":\"lj45\",\"GLF3\":\"lj45\",\"GLF4\":\"lj45\",\"GLF5\":\"lj45\",\"GL5T\":\"lj45\",\"GLF6\":\"lj45\",\"GLEX\":\"lj45\",\"G150\":\"lj45\",\"G200\":\"lj45\",\"G250\":\"lj45\",\"G280\":\"lj45\",\"HA4T\":\"lj45\",\"H25B\":\"lj45\",\"H25X\":\"lj45\",\"H25C\":\"lj45\",\"LJ25\":\"lj45\",\"LJ31\":\"lj45\",\"LJ35\":\"lj45\",\"LJ36\":\"lj45\",\"LJ40\":\"lj45\",\"LJ45\":\"lj45\",\"LJ55\":\"lj45\",\"LJ60\":\"lj45\",\"LJ85\":\"lj45\",\"LRJ\":\"lj45\",\"MU30\":\"lj45\",\"PRM1\":\"lj45\",\"SBR1\":\"lj45\",\"SBR2\":\"lj45\",\"WW24\":\"lj45\",\"AA5\":\"c172\",\"AC11\":\"c172\",\"BE23\":\"c172\",\"BE24\":\"c172\",\"BE33\":\"c172\",\"BE35\":\"c172\",\"BE36\":\"c172\",\"C10T\":\"c172\",\"C42\":\"c172\",\"C77R\":\"c172\",\"C82R\":\"c172\",\"C150\":\"c172\",\"C152\":\"c172\",\"C160\":\"c172\",\"C162\":\"c172\",\"C170\":\"c172\",\"C172\":\"c172\",\"C175\":\"c172\",\"C177\":\"c172\",\"C180\":\"c172\",\"C182\":\"c172\",\"C205\":\"c172\",\"C206\":\"c172\",\"C207\":\"c172\",\"C208\":\"c172\",\"C210\":\"c172\",\"C337\":\"c172\",\"COL3\":\"c172\",\"COL4\":\"c172\",\"DA40\":\"c172\",\"DV20\":\"c172\",\"EVOL\":\"c172\",\"FBA2\":\"c172\",\"FDCT\":\"c172\",\"GA8\":\"c172\",\"GLAS\":\"c172\",\"GP4\":\"c172\",\"G58\":\"c172\",\"G115\":\"c172\",\"JAB4\":\"c172\",\"KODI\":\"c172\",\"LNC2\":\"c172\",\"LNC4\":\"c172\",\"M20P\":\"c172\",\"M20T\":\"c172\",\"MO20\":\"c172\",\"NAVI\":\"c172\",\"PA22\":\"c172\",\"PA24\":\"c172\",\"PA28\":\"c172\",\"PA32\":\"c172\",\"PA38\":\"c172\",\"PA46\":\"c172\",\"PC12\":\"c172\",\"PC21\":\"c172\",\"P28\":\"c172\",\"P28A\":\"c172\",\"P28B\":\"c172\",\"P28R\":\"c172\",\"P32R\":\"c172\",\"P32T\":\"c172\",\"P46T\":\"c172\",\"P210\":\"c172\",\"RV4\":\"c172\",\"RV6\":\"c172\",\"RV7\":\"c172\",\"RV8\":\"c172\",\"RV9\":\"c172\",\"RV10\":\"c172\",\"RV12\":\"c172\",\"S208\":\"c172\",\"SR20\":\"c172\",\"SR22\":\"c172\",\"TBM7\":\"c172\",\"TBM8\":\"c172\",\"TRIN\":\"c172\",\"Z42\":\"c172\",\"WT9\":\"c172\",\"GLID\":\"c172\"}");
@@ -140,24 +210,14 @@ public class MapsActivity extends FragmentActivity {
                     "\"180\":[22,24,0,720,11,11],\"195\":[22,24,48,720,11,11],\"210\":[21,22,96,720,10,10],\"225\":[19,21,144,720,9,10],\"240\":[22,22,192,720,11,10],\"255\":[23,23,240,720,11,11],\"270\":[24,24,288,720,12,11],\"285\":[23,23,336,720,11,11],\"300\":[22,21,384,720,11,10],\"315\":[19,21,432,720,9,10],\"330\":[21,23,480,720,10,11],\"345\":[22,24,528,720,11,11],\"0\":[22,25,576,720,11,12],\"15\":[22,24,624,720,11,11],\"30\":[20,23,672,720,10,11],\"45\":[19,20,720,720,9,9],\"60\":[22,21,768,720,11,10],\"75\":[23,23,816,720,11,11],\"90\":[24,24,864,720,12,11],\"105\":[23,24,912,720,11,11],\"120\":[22,22,960,720,11,10],\"135\":[19,21,1008,720,9,10],\"150\":[20,22,1056,720,10,10],\"165\":[22,24,1104,720,11,11]},\"c172\":{\n" +
                     "\"180\":[20,18,0,768,10,8],\"195\":[21,19,48,768,10,9],\"210\":[19,19,96,768,9,9],\"225\":[18,20,144,768,9,9],\"240\":[18,20,192,768,9,9],\"255\":[18,21,240,768,9,10],\"270\":[17,22,288,768,8,10],\"285\":[18,22,336,768,9,10],\"300\":[18,20,384,768,9,9],\"315\":[18,19,432,768,9,9],\"330\":[19,19,480,768,9,9],\"345\":[20,19,528,768,10,9],\"0\":[21,19,576,768,10,9],\"15\":[21,19,624,768,10,9],\"30\":[20,20,672,768,10,9],\"45\":[19,20,720,768,9,9],\"60\":[18,20,768,768,9,9],\"75\":[18,22,816,768,9,10],\"90\":[18,21,864,768,9,10],\"105\":[18,22,912,768,9,10],\"120\":[18,20,960,768,9,9],\"135\":[19,19,1008,768,9,9],\"150\":[20,19,1056,768,10,9],\"165\":[21,19,1104,768,10,9]},\"lj45\":{\n" +
                     "\"180\":[19,23,0,816,9,11],\"195\":[20,24,48,816,10,11],\"210\":[17,23,96,816,8,11],\"225\":[19,20,144,816,9,9],\"240\":[21,19,192,816,10,9],\"255\":[22,20,240,816,11,9],\"270\":[23,21,288,816,11,10],\"285\":[22,20,336,816,11,9],\"300\":[21,19,384,816,10,9],\"315\":[20,20,432,816,10,9],\"330\":[17,22,480,816,8,10],\"345\":[19,24,528,816,9,11],\"0\":[19,23,576,816,9,11],\"15\":[20,24,624,816,10,11],\"30\":[17,23,672,816,8,11],\"45\":[20,20,720,816,10,9],\"60\":[21,19,768,816,10,9],\"75\":[22,20,816,816,11,9],\"90\":[23,21,864,816,11,10],\"105\":[22,20,912,816,11,9],\"120\":[21,19,960,816,10,9],\"135\":[19,20,1008,816,9,9],\"150\":[17,22,1056,816,8,10],\"165\":[20,24,1104,816,10,11]}}}");
-           /* if (sprite_list != null)
-                System.out.println(sprite_list.getJSONObject("large").getJSONObject("default").getJSONArray("180").toString(1));
-            if (aircraft_list != null)
-                System.out.println(aircraft_list.getString("B77W"));*/
         }
         catch (Exception e) {
             System.out.println(e.toString());
         }
 
-
-
-
         GetFlightsTask t = new GetFlightsTask();
+        Toast.makeText(getApplicationContext(), "Connecting to flight server...", Toast.LENGTH_SHORT).show();
         t.execute(targetUrl);
-
-        //mMap.addMarker(new MarkerOptions().position(new LatLng(33, -77)).title("Marker"));
-        System.out.println("Marker made!");
-
     }
 
     public int round_to_15(int a) {
@@ -244,9 +304,6 @@ public class MapsActivity extends FragmentActivity {
         }
     }
 
-
-
-
     class GetFlightsTask extends AsyncTask<String, Void, ArrayList<Flight>> {
 
         //private Exception exception;
@@ -262,6 +319,7 @@ public class MapsActivity extends FragmentActivity {
             get.setHeader("Authorization", "Token token=" + getToken());
             System.out.println(get.getFirstHeader("Authorization").toString());
             System.out.println(get.toString());
+
             try{
                 HttpResponse response = client.execute(get);
                 String result = EntityUtils.toString(response.getEntity());
@@ -271,7 +329,10 @@ public class MapsActivity extends FragmentActivity {
                     String flight_num = j.getString("ICAOflightnum");
                     if (!flight_num.equals("")) {
                         Flight f = new Flight();
-                        f.setFlightNum(j.getString("ICAOflightnum"));
+                        if (!j.getString("IATAflightnum").equals(""))
+                            f.setFlightNum(j.getString("IATAflightnum") + " / " +flight_num);
+                        else
+                            f.setFlightNum(flight_num);
                         f.setOrigin(j.getString("origin"));
                         f.setDestination(j.getString("destination"));
                         f.setAircraft(j.getString("aircraft"));
@@ -282,18 +343,14 @@ public class MapsActivity extends FragmentActivity {
                     }
                 }
                 System.out.println(ja.toString());
-                //StatusLine statusLine = response.getStatusLine();
-                //int statusCode = statusLine.getStatusCode();
-                //System.out.println(statusCode);
                 System.out.println(response.getStatusLine().getStatusCode());
                 for (Flight f : flights) {
                     System.out.print(f.toString());
-                    //System.out.println(aircraft_list.getString(f.getAircraft()));
                 }
-
                 return flights;
 
             } catch (Exception e){
+
                 System.out.println(e.toString());
                 return null;
             }
@@ -302,31 +359,38 @@ public class MapsActivity extends FragmentActivity {
 
         @Override
         protected void onPostExecute(ArrayList<Flight> flights) {
-            for (Flight f : flights) {
-
-
-                Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.yellow_large);
-                Bitmap newImage = null;
-                /*try {
-                    JSONArray arr = sprite_list.getJSONObject("large").getJSONObject(aircraft_list.getString(f.getAircraft())).getJSONArray(String.valueOf(round_to_15(f.getTrack())));
-                    System.out.println(arr.toString());
-                    newImage = Bitmap.createBitmap(bitmap, arr.getInt(2), arr.getInt(3), arr.getInt(0), arr.getInt(1));
-                } catch (JSONException e) {
-                    System.out.println(e.toString());*/
+            if (flights == null)
+                Toast.makeText(getApplicationContext(), "Failed to connect to flight server.", Toast.LENGTH_SHORT).show();
+            else {
+                Toast.makeText(getApplicationContext(), "Found " + flights.size() + " flights near your location.", Toast.LENGTH_SHORT).show();
+                for (Flight f : flights) {
+                    Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.yellow_large);
+                    Bitmap newImage = null;
+                    /*try {
+                        JSONArray arr = sprite_list.getJSONObject("large").getJSONObject(aircraft_list.getString(f.getAircraft())).getJSONArray(String.valueOf(round_to_15(f.getTrack())));
+                        System.out.println(arr.toString());
+                        newImage = Bitmap.createBitmap(bitmap, arr.getInt(2), arr.getInt(3), arr.getInt(0), arr.getInt(1));
+                    } catch (JSONException e) {
+                        System.out.println(e.toString());*/
                     newImage = Bitmap.createBitmap(bitmap, 0, 0, 35, 35);
-                //}
+                    //}
 
-                System.out.println(f.getTrack());
-                System.out.println("Rounded: " + round_to_15(f.getTrack()));
-                mMap.addMarker(new MarkerOptions().position(new LatLng(f.getLatitude(), f.getLongitude())).title(f.getFlightNum()).snippet(f.getAircraft() + ": " + f.getOrigin() + " ➟ " + f.getDestination()).icon(BitmapDescriptorFactory.fromBitmap(newImage)));
-                //Marker m = new Marker
-                //mMap.addMarker(new MarkerOptions().)
-                //Bitmap image = R.drawable.yellow_large;
+                    System.out.println(f.getTrack());
+                    System.out.println("Rounded: " + round_to_15(f.getTrack()));
+                    mMap.addMarker(new MarkerOptions().position(new LatLng(f.getLatitude(), f.getLongitude())).title(f.getFlightNum()).snippet(f.getAircraft() + ": " + f.getOrigin() + " ➟ " + f.getDestination()).icon(BitmapDescriptorFactory.fromBitmap(newImage)));
+                    CameraPosition cameraPosition = new CameraPosition.Builder().target(
+                            new LatLng(myLocation.getLatitude(), myLocation.getLongitude())).zoom(8).build();
+
+                    mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+                    mMap.setMyLocationEnabled(true);
+                    mMap.getUiSettings().setMyLocationButtonEnabled(true);
+                }
             }
         }
 
         private String getToken() {
-            return "212d9ca7e9090a71925d158646130ab4";
+            return "5b8f8af47320255762b748f45d34399a";
+            //return "212d9ca7e9090a71925d158646130ab4";
         }
 
     }
