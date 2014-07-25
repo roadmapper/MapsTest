@@ -1,0 +1,7 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.vinaydandekar.mapstest.Refresh" >
+    <item android:id="@+id/refresh"
+        android:title="@string/action_refresh"
+        android:showAsAction="ifRoom" />
+</menu>
