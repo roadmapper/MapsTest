@@ -8,9 +8,11 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.text.Html;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -26,7 +28,10 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.sothree.slidinguppanel.SlidingUpPanelLayout;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -37,33 +42,34 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import java.util.ArrayList;
 
-public class MapsActivity extends FragmentActivity implements ConnectionCallbacks, OnConnectionFailedListener, LocationListener{
+public class MapsActivity extends FragmentActivity implements ConnectionCallbacks, OnConnectionFailedListener, LocationListener {
 
     LocationClient locationClient;
     LocationRequest locationRequest;
     Location myLocation, lastLocation = null;
     boolean locationEnabled;
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
-    JSONObject sprite_list = null;
-    JSONObject aircraft_list = null;
+    JSONObject sprite_list = null, aircraft_list = null;
     String awsIP = "";
     String localhostIP = "192.168.1.103:3000";
     String targetUrl = localhostIP;
+    private SlidingUpPanelLayout layout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
+        layout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
+        /*layout.setAnchorPoint(0.9f);*/
+
         LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) && !locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
             locationEnabled = false;
             Toast.makeText(getApplicationContext(), "Please enable location.", Toast.LENGTH_SHORT).show();
-            //System.out.println("no location?!");
         }
         else {
             locationEnabled = true;
-            System.out.println("location?!");
         }
         locationClient = new LocationClient(this, this, this);
         locationRequest = new LocationRequest();
@@ -93,7 +99,7 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
-        Toast.makeText(getApplicationContext(), "Could not connect to Google Play Services", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getApplicationContext(), "Could not connect to Google Play Services. Please try again later.", Toast.LENGTH_SHORT).show();
 
     }
 
@@ -126,6 +132,15 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (layout != null && layout.isPanelExpanded() || layout.isPanelAnchored()) {
+            layout.collapsePanel();
+        } else {
+            super.onBackPressed();
         }
     }
 
@@ -416,6 +431,16 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
                     mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
                     mMap.setMyLocationEnabled(true);
                     mMap.getUiSettings().setMyLocationButtonEnabled(true);
+                    mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
+                        @Override
+                        public void onInfoWindowClick(Marker marker) {
+                            Toast.makeText(getApplicationContext(), "jbjbjb", Toast.LENGTH_SHORT).show();
+                            TextView panel = (TextView) findViewById(R.id.sliding_panel);
+                            panel.setText("jbjbjbjb");
+
+                            panel.setText(Html.fromHtml(getString(R.string.flight_data)));
+                        }
+                    });
                 }
             }
         }

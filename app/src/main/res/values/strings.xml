@@ -5,5 +5,6 @@
     <string name="title_activity_maps">FlightMap</string>
     <string name="title_activity_more_info">MoreInfo</string>
     <string name="action_refresh">Refresh</string>
+    <string name="flight_data"><![CDATA[<b>WAT</b>]]></string>
 
 </resources>
