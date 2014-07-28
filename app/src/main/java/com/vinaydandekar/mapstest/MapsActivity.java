@@ -1,6 +1,7 @@
 package com.vinaydandekar.mapstest;
 
 import android.content.Context;
+
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
@@ -8,10 +9,12 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
-import android.text.Html;
+
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,6 +44,7 @@ import org.json.JSONArray;
 
 import org.json.JSONObject;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class MapsActivity extends FragmentActivity implements ConnectionCallbacks, OnConnectionFailedListener, LocationListener {
 
@@ -53,15 +57,22 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
     String awsIP = "";
     String localhostIP = "192.168.1.103:3000";
     String targetUrl = localhostIP;
-    private SlidingUpPanelLayout layout;
+    private SlidingUpPanelLayout slidingup_panel;
+    private LinearLayout mapView, dragView;
+    private HashMap<Marker, Flight> flightMarkerMap;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
-        layout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
-        /*layout.setAnchorPoint(0.9f);*/
+        slidingup_panel = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
+        mapView = (LinearLayout) findViewById(R.id.mapView);
+        dragView = (LinearLayout) findViewById(R.id.dragView);
+
+
+        Toast.makeText(getApplicationContext(), "LOL: " + slidingup_panel.getPanelHeight(), Toast.LENGTH_SHORT).show();
 
         LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) && !locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
@@ -80,7 +91,7 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
     }
 
     @Override
-     public void onConnected(Bundle bundle) {
+    public void onConnected(Bundle bundle) {
         lastLocation = locationClient.getLastLocation();
         if (lastLocation == null) {
             locationClient.requestLocationUpdates(locationRequest, this);
@@ -137,8 +148,8 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
 
     @Override
     public void onBackPressed() {
-        if (layout != null && layout.isPanelExpanded() || layout.isPanelAnchored()) {
-            layout.collapsePanel();
+        if (slidingup_panel != null && slidingup_panel.isPanelExpanded() || slidingup_panel.isPanelAnchored()) {
+            slidingup_panel.collapsePanel();
         } else {
             super.onBackPressed();
         }
@@ -424,7 +435,7 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
 
                     System.out.println(f.getTrack());
                     System.out.println("Rounded: " + round_to_15(f.getTrack()));
-                    mMap.addMarker(new MarkerOptions().position(new LatLng(f.getLatitude(), f.getLongitude())).title(f.getFlightNum()).snippet(f.getAircraft() + ": " + f.getOrigin() + " ➟ " + f.getDestination()).icon(BitmapDescriptorFactory.fromBitmap(newImage)));
+                    Marker m = mMap.addMarker(new MarkerOptions().position(new LatLng(f.getLatitude(), f.getLongitude())).title(f.getFlightNum()).snippet(f.getAircraft() + ": " + f.getOrigin() + " ➟ " + f.getDestination()).icon(BitmapDescriptorFactory.fromBitmap(newImage)));
                     CameraPosition cameraPosition = new CameraPosition.Builder().target(
                             new LatLng(myLocation.getLatitude(), myLocation.getLongitude())).zoom(8).build();
 
@@ -435,10 +446,14 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
                         @Override
                         public void onInfoWindowClick(Marker marker) {
                             Toast.makeText(getApplicationContext(), "jbjbjb", Toast.LENGTH_SHORT).show();
-                            TextView panel = (TextView) findViewById(R.id.sliding_panel);
-                            panel.setText("jbjbjbjb");
+                            TextView origin = (TextView) findViewById(R.id.origin_ICAO);
+                            TextView destination = (TextView) findViewById(R.id.destination_ICAO);
+                            origin.setText("LOL");
+                            destination.setText("WAT");
+                            slidingup_panel.expandPanel();
 
-                            panel.setText(Html.fromHtml(getString(R.string.flight_data)));
+
+                            //panel.setText(Html.fromHtml(getString(R.string.flight_data)));
                         }
                     });
                 }

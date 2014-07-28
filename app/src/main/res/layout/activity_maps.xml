@@ -1,35 +1,186 @@
-<?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MapActivity" >
+    tools:context=".MapActivity">
 
-    <com.sothree.slidinguppanel.SlidingUpPanelLayout
-        xmlns:sothree="http://schemas.android.com/apk/res-auto"
+    <com.sothree.slidinguppanel.SlidingUpPanelLayout xmlns:sothree="http://schemas.android.com/apk/res-auto"
         android:id="@+id/sliding_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="bottom"
-        sothree:panelHeight="34dp"
         sothree:paddingStart="10dp"
-        sothree:anchorPoint="0.1"
         sothree:shadowHeight="4dp">
 
-        <fragment xmlns:android="http://schemas.android.com/apk/res/android"
-            xmlns:tools="http://schemas.android.com/tools"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+    <!-- MAIN CONTENT -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingTop="?android:attr/actionBarSize"
+        android:id="@+id/mapView">
+
+        <fragment
             android:id="@+id/map"
+            android:name="com.google.android.gms.maps.MapFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </LinearLayout>
 
-            android:name="com.google.android.gms.maps.MapFragment"/>
+    <!-- SLIDING LAYOUT -->
+    <LinearLayout
+        android:id="@+id/dragView"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:background="#eeeeee"
+        android:clickable="true"
+        android:focusable="false"
+        android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/sliding_panel"
+        <TableLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="center|top"
-            android:text="The Awesome Sliding Up Panel"
-            android:textSize="16sp" />
-    </com.sothree.slidinguppanel.SlidingUpPanelLayout>
+            android:shrinkColumns="*"
+            android:stretchColumns="*"
+            android:background="#3366CC">
+
+            <TableRow
+                android:layout_height="wrap_content"
+                android:layout_width="fill_parent"
+                android:gravity="center_horizontal">
+                <TextView
+                    android:id="@+id/airline"
+                    android:text="[airline]"
+                    android:layout_width="0dip"
+                    android:layout_weight="2"
+                    android:textColor="#ffffff"
+                    android:textSize="20sp"
+                    android:padding="18dip"
+                    android:gravity="left"/>
+
+                <TextView
+                    android:id="@+id/flight_num"
+                    android:text="AB1029"
+                    android:layout_width="0dip"
+                    android:layout_weight="1"
+                    android:textColor="#ffffff"
+                    android:textSize="20sp"
+                    android:padding="18dip"
+                    android:gravity="center"/>
+            </TableRow>
+
+            <TableRow
+                android:id="@+id/tableRow1"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent">
+
+                <TextView
+                    android:id="@+id/origin_ICAO"
+                    android:text="ORG"
+                    android:layout_width="0dip"
+                    android:layout_weight="1"
+                    android:textColor="#ffffff"
+                    android:textSize="40sp"
+                    android:gravity="center"/>
+                <TextView
+                    android:id="@+id/arrow"
+                    android:text="@string/arrow"
+                    android:layout_width="0dip"
+                    android:layout_weight="1"
+                    android:textColor="#ffffff"
+                    android:textSize="40sp"
+                    android:gravity="center"/>
+                <TextView
+                    android:id="@+id/destination_ICAO"
+                    android:text="DES"
+                    android:layout_width="0dip"
+                    android:layout_weight="1"
+                    android:textColor="#ffffff"
+                    android:textSize="40sp"
+                    android:gravity="center"/>
+            </TableRow>
+
+            <TableRow
+                android:layout_height="wrap_content"
+                android:layout_width="fill_parent"
+                android:gravity="center_horizontal">
+
+                <TextView
+                    android:id="@+id/origin_airport_name"
+                    android:text="Origin Airport Name"
+                    android:layout_width="0dip"
+                    android:layout_weight="1"
+                    android:textColor="#ffffff"
+                    android:textSize="18sp"
+                    android:padding="8dip"
+                    android:gravity="left"/>
+
+                <TextView
+                    android:id="@+id/destination_airport_name"
+                    android:text="Destination Airport Name"
+                    android:layout_width="0dip"
+                    android:layout_weight="1"
+                    android:textColor="#ffffff"
+                    android:textSize="18sp"
+                    android:padding="8dip"
+                    android:gravity="right"/>
+            </TableRow>
+
+            <TableRow
+                android:layout_height="wrap_content"
+                android:layout_width="fill_parent"
+                android:gravity="center_horizontal">
+
+                <TextView
+                    android:id="@+id/aircraft"
+                    android:text="Boeing 777-300ER"
+                    android:layout_width="0dip"
+                    android:layout_weight="2"
+                    android:textColor="#ffffff"
+                    android:textSize="20sp"
+                    android:padding="18dip"
+                    android:gravity="left"/>
+
+                <TextView
+                    android:id="@+id/registration"
+                    android:text="VT-ALM"
+                    android:layout_width="0dip"
+                    android:layout_weight="1"
+                    android:textColor="#ffffff"
+                    android:textSize="20sp"
+                    android:padding="18dip"
+                    android:gravity="right"/>
+            </TableRow>
+
+            <TableRow
+                android:layout_height="wrap_content"
+                android:layout_width="fill_parent"
+                android:gravity="center_horizontal">
+
+                <TextView
+                    android:id="@+id/speed"
+                    android:text="300 kts"
+                    android:layout_width="0dip"
+                    android:layout_weight="1"
+                    android:textColor="#ffffff"
+                    android:textSize="20sp"
+                    android:padding="18dip"
+                    android:gravity="left"/>
+
+                <TextView
+                    android:id="@+id/altitude"
+                    android:text="10000 ft"
+                    android:layout_width="0dip"
+                    android:layout_weight="1"
+                    android:textColor="#ffffff"
+                    android:textSize="20sp"
+                    android:padding="18dip"
+                    android:gravity="right"/>
+            </TableRow>
+
+        </TableLayout>
+
+
+    </LinearLayout>
+        </com.sothree.slidinguppanel.SlidingUpPanelLayout>
 </RelativeLayout>
