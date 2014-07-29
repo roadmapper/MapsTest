@@ -10,10 +10,12 @@ import android.os.AsyncTask;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
+import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -45,6 +47,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 
 public class MapsActivity extends FragmentActivity implements ConnectionCallbacks, OnConnectionFailedListener, LocationListener {
 
@@ -59,9 +62,9 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
     JSONObject sprite_list = null, aircraft_list = null;
     
     // Server IPs, either local or using Amazon Web Services
-    String awsIP = "";
+    String awsIP = "ec2-54-81-0-35.compute-1.amazonaws.com";
     String localhostIP = "192.168.1.103:3000";
-    String targetUrl = localhostIP;
+    String targetUrl = awsIP;
     
     // Layout objects for sliding up panel
     private SlidingUpPanelLayout slidingup_panel;
@@ -76,8 +79,35 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
         setContentView(R.layout.activity_maps);
 
         slidingup_panel = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
+        slidingup_panel.setPanelSlideListener(new SlidingUpPanelLayout.PanelSlideListener() {
+            @Override
+            public void onPanelSlide(View view, float v) {
+
+            }
+
+            @Override
+            public void onPanelCollapsed(View view) {
+
+            }
+
+            @Override
+            public void onPanelExpanded(View view) {
+
+            }
+
+            @Override
+            public void onPanelAnchored(View view) {
+
+            }
+
+            @Override
+            public void onPanelHidden(View view) {
+
+            }
+        });
         mapView = (LinearLayout) findViewById(R.id.mapView);
         dragView = (LinearLayout) findViewById(R.id.dragView);
+        flightMarkerMap = new HashMap<Marker, Flight>();
 
 
         Toast.makeText(getApplicationContext(), "LOL: " + slidingup_panel.getPanelHeight(), Toast.LENGTH_SHORT).show();
@@ -222,7 +252,7 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
             latitude = myLocation.getLatitude();
             longitude = myLocation.getLongitude();
         }
-        setTargetUrl(myLocation, localhostIP);
+        setTargetUrl(myLocation, awsIP);
 
         try {
             aircraft_list = new JSONObject("{\"A388\":\"a380\",\"A380\":\"a380\",\"A389\":\"a380\",\"B741\":\"b747\",\"B742\":\"b747\",\"B743\":\"b747\",\"B744\":\"b747\",\"B74F\":\"b747\",\"B74S\":\"b747\",\"B748\":\"b747\",\"BCLF\":\"b747\",\"BLCF\":\"b747\",\"A318\":\"a320\",\"A319\":\"a320\",\"A320\":\"a320\",\"A321\":\"a320\",\"B731\":\"b737\",\"B732\":\"b737\",\"B733\":\"b737\",\"B734\":\"b737\",\"B735\":\"b737\",\"B736\":\"b737\",\"B737\":\"b737\",\"B738\":\"b737\",\"B739\":\"b737\",\"E170\":\"b737\",\"E190\":\"b737\",\"A300\":\"b737\",\"A30B\":\"b737\",\"A306\":\"b737\",\"A310\":\"b737\",\"SU95\":\"b737\",\"B772\":\"b777\",\"B773\":\"b777\",\"B77F\":\"b777\",\"B77L\":\"b777\",\"B77W\":\"b777\",\"B752\":\"b757\",\"B753\":\"b757\",\"T204\":\"b757\",\"T214\":\"b757\",\"B762\":\"b767\",\"B763\":\"b767\",\"B764\":\"b767\",\"A332\":\"a330\",\"A333\":\"a330\",\"A359\":\"a330\",\"B788\":\"a330\",\"B789\":\"a330\",\"A3ST\":\"a330\",\"A342\":\"a343\",\"A343\":\"a343\",\"IL76\":\"a343\",\"IL86\":\"a343\",\"IL96\":\"a343\",\"K35R\":\"a343\",\"A124\":\"a343\",\"A345\":\"a346\",\"A346\":\"a346\",\"RJ1H\":\"rjx\",\"RJ70\":\"rjx\",\"RJ85\":\"rjx\",\"B461\":\"rjx\",\"B462\":\"rjx\",\"B463\":\"rjx\",\"A148\":\"rjx\",\"A158\":\"rjx\",\"MD11\":\"md11\",\"DC10\":\"md11\",\"A109\":\"helo\",\"A139\":\"helo\",\"A149\":\"helo\",\"A189\":\"helo\",\"AS32\":\"helo\",\"AS3B\":\"helo\",\"AS50\":\"helo\",\"AS55\":\"helo\",\"AS65\":\"helo\",\"B407\":\"helo\",\"B412\":\"helo\",\"B427\":\"helo\",\"B429\":\"helo\",\"B430\":\"helo\",\"EC20\":\"helo\",\"EC25\":\"helo\",\"EC30\":\"helo\",\"EC35\":\"helo\",\"EC45\":\"helo\",\"EC55\":\"helo\",\"H269\":\"helo\",\"R44\":\"helo\",\"S61\":\"helo\",\"S76\":\"helo\",\"S92\":\"helo\",\"MD80\":\"md80\",\"MD81\":\"md80\",\"MD82\":\"md80\",\"MD83\":\"md80\",\"MD87\":\"md80\",\"MD88\":\"md80\",\"MD90\":\"md80\",\"B712\":\"md80\",\"B717\":\"md80\",\"B722\":\"md80\",\"CRJ\":\"md80\",\"CRJX\":\"md80\",\"CRJ1\":\"md80\",\"CRJ2\":\"md80\",\"CRJ7\":\"md80\",\"CRJ9\":\"md80\",\"DC91\":\"md80\",\"DC93\":\"md80\",\"DC95\":\"md80\",\"E45X\":\"md80\",\"E135\":\"md80\",\"E145\":\"md80\",\"F70\":\"md80\",\"F100\":\"md80\",\"T154\":\"md80\",\"YK42\":\"md80\",\"SB20\":\"sb20\",\"SF34\":\"sb20\",\"AN26\":\"sb20\",\"ATP\":\"sb20\",\"AT42\":\"sb20\",\"AT72\":\"sb20\",\"AT43\":\"sb20\",\"AT44\":\"sb20\",\"AT45\":\"sb20\",\"AT46\":\"sb20\",\"AT73\":\"sb20\",\"AT74\":\"sb20\",\"AT75\":\"sb20\",\"AT76\":\"sb20\",\"B190\":\"sb20\",\"B350\":\"sb20\",\"BE99\":\"sb20\",\"C130\":\"sb20\",\"CVLP\":\"sb20\",\"CVLT\":\"sb20\",\"D228\":\"sb20\",\"D328\":\"sb20\",\"DC3\":\"sb20\",\"DC3T\":\"sb20\",\"DC6\":\"sb20\",\"DHC6\":\"sb20\",\"DHC7\":\"sb20\",\"DH8A\":\"sb20\",\"DH8B\":\"sb20\",\"DH8C\":\"sb20\",\"DH8D\":\"sb20\",\"E110\":\"sb20\",\"E120\":\"sb20\",\"F50\":\"sb20\",\"G159\":\"sb20\",\"JS31\":\"sb20\",\"JS32\":\"sb20\",\"JS41\":\"sb20\",\"SH33\":\"sb20\",\"SH36\":\"sb20\",\"SW4\":\"sb20\",\"J328\":\"sb20\",\"AC50\":\"sb20\",\"AC90\":\"sb20\",\"AC95\":\"sb20\",\"AEST\":\"sb20\",\"BE10\":\"sb20\",\"BE20\":\"sb20\",\"BE30\":\"sb20\",\"BE50\":\"sb20\",\"BE55\":\"sb20\",\"BE56\":\"sb20\",\"BE58\":\"sb20\",\"BE60\":\"sb20\",\"BE65\":\"sb20\",\"BE76\":\"sb20\",\"BE80\":\"sb20\",\"BE95\":\"sb20\",\"BE96\":\"sb20\",\"BE9L\":\"sb20\",\"BE9T\":\"sb20\",\"C303\":\"sb20\",\"C310\":\"sb20\",\"C320\":\"sb20\",\"C340\":\"sb20\",\"C402\":\"sb20\",\"C404\":\"sb20\",\"C414\":\"sb20\",\"C421\":\"sb20\",\"C425\":\"sb20\",\"C441\":\"sb20\",\"C21T\":\"sb20\",\"DA42\":\"sb20\",\"MU2\":\"sb20\",\"PA23\":\"sb20\",\"PA27\":\"sb20\",\"PA30\":\"sb20\",\"PA31\":\"sb20\",\"PA34\":\"sb20\",\"PA44\":\"sb20\",\"PA60\":\"sb20\",\"PAY1\":\"sb20\",\"PAY2\":\"sb20\",\"PAY3\":\"sb20\",\"PAY4\":\"sb20\",\"P34A\":\"sb20\",\"P180\":\"sb20\",\"SW2\":\"sb20\",\"SW3\":\"sb20\",\"ASTR\":\"lj45\",\"BE40\":\"lj45\",\"C500\":\"lj45\",\"C501\":\"lj45\",\"C510\":\"lj45\",\"C525\":\"lj45\",\"C25A\":\"lj45\",\"C25B\":\"lj45\",\"C25C\":\"lj45\",\"C550\":\"lj45\",\"C551\":\"lj45\",\"C560\":\"lj45\",\"C56X\":\"lj45\",\"C650\":\"lj45\",\"C680\":\"lj45\",\"C750\":\"lj45\",\"CL30\":\"lj45\",\"CL60\":\"lj45\",\"EA50\":\"lj45\",\"E50P\":\"lj45\",\"E55P\":\"lj45\",\"FA10\":\"lj45\",\"FA20\":\"lj45\",\"FA30\":\"lj45\",\"FA40\":\"lj45\",\"FA50\":\"lj45\",\"FA7X\":\"lj45\",\"F900\":\"lj45\",\"F2TH\":\"lj45\",\"GALX\":\"lj45\",\"GLF2\":\"lj45\",\"GLF3\":\"lj45\",\"GLF4\":\"lj45\",\"GLF5\":\"lj45\",\"GL5T\":\"lj45\",\"GLF6\":\"lj45\",\"GLEX\":\"lj45\",\"G150\":\"lj45\",\"G200\":\"lj45\",\"G250\":\"lj45\",\"G280\":\"lj45\",\"HA4T\":\"lj45\",\"H25B\":\"lj45\",\"H25X\":\"lj45\",\"H25C\":\"lj45\",\"LJ25\":\"lj45\",\"LJ31\":\"lj45\",\"LJ35\":\"lj45\",\"LJ36\":\"lj45\",\"LJ40\":\"lj45\",\"LJ45\":\"lj45\",\"LJ55\":\"lj45\",\"LJ60\":\"lj45\",\"LJ85\":\"lj45\",\"LRJ\":\"lj45\",\"MU30\":\"lj45\",\"PRM1\":\"lj45\",\"SBR1\":\"lj45\",\"SBR2\":\"lj45\",\"WW24\":\"lj45\",\"AA5\":\"c172\",\"AC11\":\"c172\",\"BE23\":\"c172\",\"BE24\":\"c172\",\"BE33\":\"c172\",\"BE35\":\"c172\",\"BE36\":\"c172\",\"C10T\":\"c172\",\"C42\":\"c172\",\"C77R\":\"c172\",\"C82R\":\"c172\",\"C150\":\"c172\",\"C152\":\"c172\",\"C160\":\"c172\",\"C162\":\"c172\",\"C170\":\"c172\",\"C172\":\"c172\",\"C175\":\"c172\",\"C177\":\"c172\",\"C180\":\"c172\",\"C182\":\"c172\",\"C205\":\"c172\",\"C206\":\"c172\",\"C207\":\"c172\",\"C208\":\"c172\",\"C210\":\"c172\",\"C337\":\"c172\",\"COL3\":\"c172\",\"COL4\":\"c172\",\"DA40\":\"c172\",\"DV20\":\"c172\",\"EVOL\":\"c172\",\"FBA2\":\"c172\",\"FDCT\":\"c172\",\"GA8\":\"c172\",\"GLAS\":\"c172\",\"GP4\":\"c172\",\"G58\":\"c172\",\"G115\":\"c172\",\"JAB4\":\"c172\",\"KODI\":\"c172\",\"LNC2\":\"c172\",\"LNC4\":\"c172\",\"M20P\":\"c172\",\"M20T\":\"c172\",\"MO20\":\"c172\",\"NAVI\":\"c172\",\"PA22\":\"c172\",\"PA24\":\"c172\",\"PA28\":\"c172\",\"PA32\":\"c172\",\"PA38\":\"c172\",\"PA46\":\"c172\",\"PC12\":\"c172\",\"PC21\":\"c172\",\"P28\":\"c172\",\"P28A\":\"c172\",\"P28B\":\"c172\",\"P28R\":\"c172\",\"P32R\":\"c172\",\"P32T\":\"c172\",\"P46T\":\"c172\",\"P210\":\"c172\",\"RV4\":\"c172\",\"RV6\":\"c172\",\"RV7\":\"c172\",\"RV8\":\"c172\",\"RV9\":\"c172\",\"RV10\":\"c172\",\"RV12\":\"c172\",\"S208\":\"c172\",\"SR20\":\"c172\",\"SR22\":\"c172\",\"TBM7\":\"c172\",\"TBM8\":\"c172\",\"TRIN\":\"c172\",\"Z42\":\"c172\",\"WT9\":\"c172\",\"GLID\":\"c172\"}");
@@ -295,6 +325,9 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
         t.execute(targetUrl);
     }
 
+    /**
+     * Rounding function for track to find correctly positioned sprite for marker icon
+    */
     public int round_to_15(int a) {
         if (0 == a)
             return 0;
@@ -379,6 +412,50 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
         }
     }
 
+    /**
+     * Acquire official airport name
+     */
+    class GetFlightInfoTask extends AsyncTask<String, Void, HashMap<String, String>> {
+
+        @Override
+        protected HashMap<String, String> doInBackground(String... params) {
+            String targetUrl = "http://krk.fr24.com/_external/planedata_json.1.3.php?f=" + params[0];
+            HttpGet get = new HttpGet(targetUrl);
+            HttpClient client = new DefaultHttpClient();
+            HashMap<String, String> map = new HashMap<String, String>();
+            try {
+                HttpResponse response = client.execute(get);
+                String result = EntityUtils.toString(response.getEntity());
+                JSONObject j = new JSONObject(result);
+                Iterator keys = j.keys();
+                while (keys.hasNext()) {
+                    String key = (String) keys.next();
+                    map.put(key, j.getString(key));
+                }
+                return map;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            }
+
+
+        }
+
+        @Override
+        protected void onPostExecute(HashMap<String, String> map) {
+            TextView originName = (TextView) findViewById(R.id.origin_airport_name);
+            TextView destinationName = (TextView) findViewById(R.id.destination_airport_name);
+            TextView aircraft = (TextView) findViewById(R.id.aircraft);
+            TextView airline = (TextView) findViewById(R.id.airline);
+            originName.setText(map.get("from_city").split(", ")[1]);
+            destinationName.setText(map.get("to_city").split(", ")[1]);
+            aircraft.setText(map.get("aircraft"));
+            airline.setText(map.get("airline"));
+
+        }
+
+    }
+
     class GetFlightsTask extends AsyncTask<String, Void, ArrayList<Flight>> {
 
         //private Exception exception;
@@ -414,6 +491,10 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
                         f.setLatitude(j.getJSONArray("location").getDouble(0));
                         f.setLongitude(j.getJSONArray("location").getDouble(1));
                         f.setTrack(j.getInt("aircraft_track"));
+                        f.setRegistration(j.getString("registration"));
+                        f.setSpeed(j.getInt("speed_kts"));
+                        f.setAltitude(j.getInt("altitude_ft"));
+                        f.setFlight_id(j.getString("flight_id"));
                         flights.add(f);
                     }
                 }
@@ -453,6 +534,8 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
                     System.out.println(f.getTrack());
                     System.out.println("Rounded: " + round_to_15(f.getTrack()));
                     Marker m = mMap.addMarker(new MarkerOptions().position(new LatLng(f.getLatitude(), f.getLongitude())).title(f.getFlightNum()).snippet(f.getAircraft() + ": " + f.getOrigin() + " ➟ " + f.getDestination()).icon(BitmapDescriptorFactory.fromBitmap(newImage)));
+                    flightMarkerMap.put(m, f);
+                    
                     CameraPosition cameraPosition = new CameraPosition.Builder().target(
                             new LatLng(myLocation.getLatitude(), myLocation.getLongitude())).zoom(8).build();
 
@@ -462,11 +545,26 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
                     mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
                         @Override
                         public void onInfoWindowClick(Marker marker) {
-                            Toast.makeText(getApplicationContext(), "jbjbjb", Toast.LENGTH_SHORT).show();
-                            TextView origin = (TextView) findViewById(R.id.origin_ICAO);
-                            TextView destination = (TextView) findViewById(R.id.destination_ICAO);
-                            origin.setText("LOL");
-                            destination.setText("WAT");
+                            Flight f = flightMarkerMap.get(marker);
+                            TextView flight_num = (TextView) findViewById(R.id.flight_num);
+                            TextView origin = (TextView) findViewById(R.id.origin_IATA);
+                            TextView destination = (TextView) findViewById(R.id.destination_IATA);
+                            TextView reg = (TextView) findViewById(R.id.registration);
+                            TextView speed = (TextView) findViewById(R.id.speed);
+                            TextView alt = (TextView) findViewById(R.id.altitude);
+                            flight_num.setText(f.getFlightNum());
+                            origin.setText(f.getOrigin());
+                            destination.setText(f.getDestination());
+                            if (f.getRegistration().equals("")) {
+                                reg.setText("No registration");
+                            } else {
+                                reg.setText(f.getRegistration());
+                            }
+                            speed.setText(f.getSpeed() + " kts");
+                            alt.setText(String.format("%,8d",f.getAltitude()) + " ft");
+                            GetFlightInfoTask infoTask = new GetFlightInfoTask();
+                            infoTask.execute(f.getFlight_id());
+
                             slidingup_panel.expandPanel();
 
 
@@ -478,8 +576,8 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
         }
 
         private String getToken() {
-            return "5b8f8af47320255762b748f45d34399a";
-            //return "212d9ca7e9090a71925d158646130ab4";
+            //return "5b8f8af47320255762b748f45d34399a";
+            return "212d9ca7e9090a71925d158646130ab4";
         }
 
     }

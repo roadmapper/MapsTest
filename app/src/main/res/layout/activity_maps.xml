@@ -75,7 +75,7 @@
                 android:layout_width="match_parent">
 
                 <TextView
-                    android:id="@+id/origin_ICAO"
+                    android:id="@+id/origin_IATA"
                     android:text="ORG"
                     android:layout_width="0dip"
                     android:layout_weight="1"
@@ -91,7 +91,7 @@
                     android:textSize="40sp"
                     android:gravity="center"/>
                 <TextView
-                    android:id="@+id/destination_ICAO"
+                    android:id="@+id/destination_IATA"
                     android:text="DES"
                     android:layout_width="0dip"
                     android:layout_weight="1"
@@ -138,7 +138,7 @@
                     android:layout_weight="2"
                     android:textColor="#ffffff"
                     android:textSize="20sp"
-                    android:padding="18dip"
+                    android:padding="10dip"
                     android:gravity="left"/>
 
                 <TextView
@@ -148,7 +148,7 @@
                     android:layout_weight="1"
                     android:textColor="#ffffff"
                     android:textSize="20sp"
-                    android:padding="18dip"
+                    android:padding="10dip"
                     android:gravity="right"/>
             </TableRow>
 

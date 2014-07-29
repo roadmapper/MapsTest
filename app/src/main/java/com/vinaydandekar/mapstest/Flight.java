@@ -5,9 +5,15 @@ package com.vinaydandekar.mapstest;
  */
 public class Flight {
 
-    private String flightNum, origin, destination, aircraft;
-    private int track;
+    private String flightNum;
+    private String origin;
+    private String destination;
+    private String aircraft;
+
+    private String flight_id;
+    private int track, speed, altitude;
     private double latitude, longitude;
+    private String registration;
 
     public String getFlightNum() {
         return flightNum;
@@ -65,7 +71,41 @@ public class Flight {
         this.track = track;
     }
 
+    public String getRegistration() {
+        return registration;
+    }
+
+    public void setRegistration(String registration) {
+        this.registration = registration;
+    }
+
+    public int getSpeed() {
+        return speed;
+    }
+
+    public void setSpeed(int speed) {
+        this.speed = speed;
+    }
+
+    public int getAltitude() {
+        return altitude;
+    }
+
+    public void setAltitude(int altitude) {
+        this.altitude = altitude;
+    }
+
+    public String getFlight_id() {
+        return flight_id;
+    }
+
+    public void setFlight_id(String flight_id) {
+        this.flight_id = flight_id;
+    }
+
     public String toString() {
         return "\n\nFlight Number: " + flightNum + "\n" + origin + " -> " + destination + "\n" + "(" + latitude + ", " + longitude + ") \n\n";
     }
+
+
 }
