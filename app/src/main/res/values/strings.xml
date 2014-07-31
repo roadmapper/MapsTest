@@ -5,7 +5,9 @@
     <string name="title_activity_maps">FlightMap</string>
     <string name="title_activity_more_info">MoreInfo</string>
     <string name="action_refresh">Refresh</string>
+    <string name="action_plane_count">Increase # of Planes</string>
     <string name="arrow">➟</string>
     <string name="flight_data"><![CDATA[<b>WAT</b>]]></string>
+    <!--<string name="google_maps_api">AIzaSyAD_nToLsVMOe7QFn0UTGItM8PW1ErAIr8</string>-->
 
 </resources>

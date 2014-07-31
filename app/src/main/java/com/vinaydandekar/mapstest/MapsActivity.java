@@ -16,6 +16,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -44,6 +45,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -72,40 +74,21 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
     
     private HashMap<Marker, Flight> flightMarkerMap;
 
+    Bitmap bitmap = null;
+    Bitmap newImage = null;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+        bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.yellow_large);
+        newImage = Bitmap.createBitmap(bitmap, 0, 0, 36, 38);
 
         slidingup_panel = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
-        slidingup_panel.setPanelSlideListener(new SlidingUpPanelLayout.PanelSlideListener() {
-            @Override
-            public void onPanelSlide(View view, float v) {
 
-            }
-
-            @Override
-            public void onPanelCollapsed(View view) {
-
-            }
-
-            @Override
-            public void onPanelExpanded(View view) {
-
-            }
-
-            @Override
-            public void onPanelAnchored(View view) {
-
-            }
-
-            @Override
-            public void onPanelHidden(View view) {
-
-            }
-        });
         mapView = (LinearLayout) findViewById(R.id.mapView);
+
         dragView = (LinearLayout) findViewById(R.id.dragView);
         flightMarkerMap = new HashMap<Marker, Flight>();
 
@@ -200,6 +183,8 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
     */
     public void refresh() {
         locationClient.requestLocationUpdates(locationRequest, this);
+        flightMarkerMap.clear();
+        mMap.clear();
         setUpMap();
     }
 
@@ -208,7 +193,7 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
      * to the flight data server
     */
     private void setTargetUrl(Location l, String ip) {
-        targetUrl = "http://" + ip + "/api/v1/flights/find_lat_long?lat=" + l.getLatitude() +"&long=" + l.getLongitude() +"&quantity=20";
+        targetUrl = "http://" + ip + "/api/v1/flights/find_lat_long?lat=" + l.getLatitude() +"&long=" + l.getLongitude() +"&quantity=40";
     }
 
     /**
@@ -412,8 +397,20 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
         }
     }
 
+    public static Bitmap createCroppedBitmap(Bitmap src, int top, int left, int width, int height) {
+      /*
+        bug: returns incorrect region, so must do it manually
+        return Bitmap.createBitmap(src, left, top,width, height);
+      */
+        int stride = width; // ints per row, if want padding at end of row, make stride larger
+        int offset = 0;
+        int []pixels = new int[width*height];
+        src.getPixels(pixels, offset, stride, left, top, width, height);
+        return Bitmap.createBitmap(pixels, width, height, src.getConfig());
+    }
+
     /**
-     * Acquire official airport name
+     * Acquire additional information about flight, connects to flightradar24.com
      */
     class GetFlightInfoTask extends AsyncTask<String, Void, HashMap<String, String>> {
 
@@ -447,10 +444,22 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
             TextView destinationName = (TextView) findViewById(R.id.destination_airport_name);
             TextView aircraft = (TextView) findViewById(R.id.aircraft);
             TextView airline = (TextView) findViewById(R.id.airline);
-            originName.setText(map.get("from_city").split(", ")[1]);
-            destinationName.setText(map.get("to_city").split(", ")[1]);
-            aircraft.setText(map.get("aircraft"));
-            airline.setText(map.get("airline"));
+            if (map.keySet().contains("from_city"))
+                originName.setText(map.get("from_city").split(", ")[1]);
+            else
+                originName.setText("Unknown");
+            if (map.keySet().contains("to_city"))
+                destinationName.setText(map.get("to_city").split(", ")[1]);
+            else
+                destinationName.setText("Unknown");
+            if (map.keySet().contains("aircraft"))
+                aircraft.setText(map.get("aircraft"));
+            else
+                aircraft.setText("Unknown");
+            if (map.keySet().contains("airline"))
+                airline.setText(map.get("airline"));
+            else
+                airline.setText("Unknown");
 
         }
 
@@ -520,20 +529,32 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
             else {
                 Toast.makeText(getApplicationContext(), "Found " + flights.size() + " flights near your location.", Toast.LENGTH_SHORT).show();
                 for (Flight f : flights) {
-                    Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.yellow_large);
-                    Bitmap newImage = null;
+                    /*Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.yellow_large);
+                    Bitmap newImage = null;*/
                     /*try {
-                        JSONArray arr = sprite_list.getJSONObject("large").getJSONObject(aircraft_list.getString(f.getAircraft())).getJSONArray(String.valueOf(round_to_15(f.getTrack())));
+                        JSONArray arr = sprite_list.getJSONObject("large").getJSONObject("default").getJSONArray(String.valueOf(round_to_15(f.getTrack())));
                         System.out.println(arr.toString());
-                        newImage = Bitmap.createBitmap(bitmap, arr.getInt(2), arr.getInt(3), arr.getInt(0), arr.getInt(1));
+                        newImage = Bitmap.createBitmap(bitmap, arr.getInt(2), arr.getInt(3), arr.getInt(0)+12, arr.getInt(1)+12);
+                        Log.d("picture", f.getFlightNum() + ": " + arr.toString());
                     } catch (JSONException e) {
                         System.out.println(e.toString());*/
-                    newImage = Bitmap.createBitmap(bitmap, 0, 0, 35, 35);
+                    /*newImage = Bitmap.createBitmap(bitmap, 0, 0, 36, 38);*/
                     //}
+
+                    /*Toast toast = new Toast(getApplicationContext());
+                    ImageView view = new ImageView(getApplicationContext());
+                    *//*int[] pixels = new int[34*33];
+                    bitmap.getPixels(pixels, 0, 34, 576, 48, 34, 33);*//*
+                    Bitmap wat = *//*createCroppedBitmap(bitmap, 48, 0, 40, 86);*//*Bitmap.createBitmap(bitmap, 288, 48, 37+13, 41+26);
+                    //37,41,288,48,18,20
+                    view.setImageBitmap(wat);
+                    toast.setView(view);
+                    toast.setDuration(Toast.LENGTH_SHORT);
+                    toast.show();*/
 
                     System.out.println(f.getTrack());
                     System.out.println("Rounded: " + round_to_15(f.getTrack()));
-                    Marker m = mMap.addMarker(new MarkerOptions().position(new LatLng(f.getLatitude(), f.getLongitude())).title(f.getFlightNum()).snippet(f.getAircraft() + ": " + f.getOrigin() + " ➟ " + f.getDestination()).icon(BitmapDescriptorFactory.fromBitmap(newImage)));
+                    Marker m = mMap.addMarker(new MarkerOptions().position(new LatLng(f.getLatitude(), f.getLongitude())).title(f.getFlightNum()).snippet(f.getAircraft()).icon(BitmapDescriptorFactory.fromBitmap(newImage)));
                     flightMarkerMap.put(m, f);
                     
                     CameraPosition cameraPosition = new CameraPosition.Builder().target(
@@ -566,9 +587,6 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
                             infoTask.execute(f.getFlight_id());
 
                             slidingup_panel.expandPanel();
-
-
-                            //panel.setText(Html.fromHtml(getString(R.string.flight_data)));
                         }
                     });
                 }
@@ -576,8 +594,8 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
         }
 
         private String getToken() {
-            //return "5b8f8af47320255762b748f45d34399a";
-            return "212d9ca7e9090a71925d158646130ab4";
+            //return "5b8f8af47320255762b748f45d34399a" // token on localhost;
+            return "212d9ca7e9090a71925d158646130ab4"; // token on AWS
         }
 
     }
