@@ -53,21 +53,22 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
     LocationRequest locationRequest;
     Location myLocation, lastLocation = null;
     boolean locationEnabled;
-    
+
     // Map for the application
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     JSONObject sprite_list = null, aircraft_list = null;
-    
+
     // Server IPs, either local or using Amazon Web Services
     String awsIP = "ec2-54-81-0-35.compute-1.amazonaws.com";
-    String localhostIP = "192.168.1.103:3000";
+    String localhostIP = "192.168.1.200:3000";
+    String publicIP = "roadmapper.no-ip.org";
     String targetUrl = "";
-    String ipAddr = localhostIP;
-    
+    String ipAddr = publicIP;
+
     // Layout objects for sliding up panel
     private SlidingUpPanelLayout slidingup_panel;
     //private LinearLayout mapView, dragView;
-    
+
     private HashMap<Marker, Flight> flightMarkerMap;
 
     Bitmap bitmap = null;
@@ -180,7 +181,7 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
     /**
      * Allows the user the refresh the data manually if data is stale or if the application
      * is not able to connect to the flight server.
-    */
+     */
     public void refresh() {
         locationClient.requestLocationUpdates(locationRequest, this);
         flightMarkerMap.clear();
@@ -191,7 +192,7 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
     /**
      * Once location is acquired, the coordinates are put in as parameters in the URL to connect
      * to the flight data server
-    */
+     */
     private void setTargetUrl(Location l, String ip) {
         targetUrl = "http://" + ip + "/api/v1/flights/find_lat_long?lat=" + l.getLatitude() +"&long=" + l.getLongitude() +"&quantity=40";
     }
@@ -313,7 +314,7 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
 
     /**
      * Rounding function for track to find correctly positioned sprite for marker icon
-    */
+     */
     public int round_to_15(int a) {
         if (0 == a)
             return 0;
@@ -406,7 +407,10 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
 
         @Override
         protected HashMap<String, String> doInBackground(String... params) {
-            String targetUrl = "http://krk.fr24.com/_external/planedata_json.1.3.php?f=" + params[0];
+            // Old URL
+            //String targetUrl = "http://krk.fr24.com/_external/planedata_json.1.3.php?f=" + params[0];
+            // Updated URL
+            String targetUrl = "http://arn.data.fr24.com/_external/planedata_json.1.4.php?f=" + params[0];
             HttpGet get = new HttpGet(targetUrl);
             HttpClient client = new DefaultHttpClient();
             HashMap<String, String> map = new HashMap<String, String>();
@@ -475,6 +479,7 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
 
             try{
                 HttpResponse response = client.execute(get);
+                System.out.println(response.getEntity());
                 String result = EntityUtils.toString(response.getEntity());
                 JSONArray ja = new JSONArray(result);
                 for (int i = 0; i < ja.length(); i++) {
@@ -525,7 +530,7 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
                     Marker m = mMap.addMarker(new MarkerOptions().position(new LatLng(f.getLatitude(), f.getLongitude())).title(f.getFlightNum()).snippet(f.getAircraft()).icon(BitmapDescriptorFactory.fromBitmap(newImage)));
                     m.setRotation(f.getTrack()-180);
                     flightMarkerMap.put(m, f);
-                    
+
                     CameraPosition cameraPosition = new CameraPosition.Builder().target(
                             new LatLng(myLocation.getLatitude(), myLocation.getLongitude())).zoom(8).build();
 
@@ -573,7 +578,8 @@ public class MapsActivity extends FragmentActivity implements ConnectionCallback
         }
 
         private String getToken() {
-            return "5b8f8af47320255762b748f45d34399a"; // token on localhost
+            return "42ace055a398677c84e0a808a11327ac";
+            //return "5b8f8af47320255762b748f45d34399a"; // token on localhost
             //return "212d9ca7e9090a71925d158646130ab4"; // token on AWS
         }
 
